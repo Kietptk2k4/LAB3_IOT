@@ -2,8 +2,8 @@ name: Build & Deploy to ECS
 
 on:
   push:
-    branches: [ "main" ]   # nếu bạn đang push vào nhánh khác, đổi tên nhánh cho khớp
-  workflow_dispatch:        # để có nút "Run workflow" chạy tay
+    branches: [ "main" ]    # Nếu bạn push nhánh khác, đổi tên ở đây
+  workflow_dispatch:         # Có nút "Run workflow" để chạy tay
 
 env:
   AWS_REGION: ap-southeast-1
@@ -15,7 +15,6 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       id-token: write
@@ -24,13 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Configure AWS credentials (OIDC)
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-region: ${{ env.AWS_REGION }}
-      #     role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} # hoặc dùng AK/SK phía dưới
-
-      Nếu không dùng OIDC, bỏ block trên và dùng block này:
+      # Dùng Access Keys (đã lưu trong Secrets)
       - name: Configure AWS credentials (Access Keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -63,7 +56,6 @@ jobs:
             --cli-input-json file://taskdef.rendered.json \
             --query 'taskDefinition.taskDefinitionArn' --output text)
           echo "NEW_TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
-          echo $NEW_TASK_DEF_ARN
 
       - name: Update ECS service
         run: |
