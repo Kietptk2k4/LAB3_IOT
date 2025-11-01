@@ -40,9 +40,9 @@ jobs:
           aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.S3_KEY }} checkpoint_best_total.pth
           ls -lah | sed -n '1,120p'
           python - <<'PY'
-import os; p="checkpoint_best_total.pth"
-print("exists:", os.path.exists(p), "size(B):", os.path.getsize(p) if os.path.exists(p) else None)
-PY
+          import os; p="checkpoint_best_total.pth"
+          print("exists:", os.path.exists(p), "size(B):", os.path.getsize(p) if os.path.exists(p) else None)
+          PY
 
       - name: Build, tag & push image
         env:
