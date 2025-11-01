@@ -8,7 +8,7 @@ COPY requirements-api.txt .
 RUN pip install --no-cache-dir -r requirements-api.txt
 
 # Copy mã nguồn + model
-COPY /app/main.py ./main.py
+COPY app/main.py ./main.py
 COPY checkpoint_best_total.pth /models/checkpoint_best_total.pth
 
 # ENV cho app
