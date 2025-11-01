@@ -4,8 +4,8 @@
   "cpu": "512",
   "memory": "1024",
   "requiresCompatibilities": ["FARGATE"],
-  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::822078811864:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::822078811864:role/ecsTaskRole",
   "containerDefinitions": [
     {
       "name": "mask-api",
