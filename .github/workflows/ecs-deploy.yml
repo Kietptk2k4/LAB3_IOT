@@ -2,8 +2,8 @@ name: Build & Deploy to ECS
 
 on:
   push:
-    branches: [ "main" ]    # Nếu bạn push nhánh khác, đổi tên ở đây
-  workflow_dispatch:         # Có nút "Run workflow" để chạy tay
+    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
   AWS_REGION: ap-southeast-1
@@ -23,7 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Dùng Access Keys (đã lưu trong Secrets)
       - name: Configure AWS credentials (Access Keys)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -35,7 +34,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      
+      # 🔽 TẢI MODEL VỀ THƯ MỤC ROOT (cùng cấp Dockerfile)
+      - name: Download model from S3
+        run: |
+          aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.S3_KEY }} checkpoint_best_total.pth
+          ls -lah | sed -n '1,120p'
+          python - <<'PY'
+import os; p="checkpoint_best_total.pth"
+print("exists:", os.path.exists(p), "size(B):", os.path.getsize(p) if os.path.exists(p) else None)
+PY
+
+      - name: Build, tag & push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push  $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          echo "IMAGE_URI=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Render task definition with new image
         run: |
@@ -57,15 +73,3 @@ jobs:
             --service "${{ env.ECS_SERVICE }}" \
             --task-definition "$NEW_TASK_DEF_ARN" \
             --force-new-deployment
-      - name: Download model from S3
-        run: aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.S3_KEY }} checkpoint_best_total.pth
-        
-
-      - name: Build, tag & push image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
-          echo "IMAGE_URI=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_ENV
