@@ -15,7 +15,7 @@ SCORE_THR = 0.50
 
 # Mapping nhãn theo COCO sau khi bạn đã fix:
 # 0: without_mask, 1: with_mask, 2: mask_weared_incorrect
-CLASSES = {0: "with_mask", 1: "without_mask", 2: "mask_weared_incorrect"}
+CLASSES =  {0: "with_mask", 1: "without_mask", 2: "mask_weared_incorrect"}
 
 # Tùy chọn: ép độ phân giải capture (0 = giữ mặc định driver)
 FRAME_W, FRAME_H = 0, 0

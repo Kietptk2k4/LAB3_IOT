@@ -4,7 +4,7 @@ from collections import defaultdict
 from torch.utils.data import WeightedRandomSampler
 
 
-def make_sampler(coco_json_path, incorrect_id=3, w_incorrect=6.0, w_normal=1.0):
+def make_sampler(coco_json_path, incorrect_id=2, w_incorrect=6.0, w_normal=1.0):
     coco = json.load(open(coco_json_path, "r", encoding="utf-8"))
     ann_by_img = defaultdict(list)
     for a in coco["annotations"]:

@@ -1,0 +1,73 @@
+name: Build & Deploy to ECS
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: mask-api
+  ECS_CLUSTER: mask-api-cluster
+  ECS_SERVICE: mask-api-service
+  TASK_DEFINITION_FILE: taskdef.json
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # - name: Configure AWS credentials (OIDC)
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-region: ${{ env.AWS_REGION }}
+      #     role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }} # hoặc dùng AK/SK phía dưới
+
+      Nếu không dùng OIDC, bỏ block trên và dùng block này:
+      - name: Configure AWS credentials (Access Keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag & push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          echo "IMAGE_URI=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Render task definition with new image
+        run: |
+          sed "s|<IMAGE_URI_PLACEHOLDER>|${IMAGE_URI}|g" ${{ env.TASK_DEFINITION_FILE }} > taskdef.rendered.json
+          cat taskdef.rendered.json
+
+      - name: Register new task definition
+        id: register-task-def
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://taskdef.rendered.json \
+            --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "NEW_TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+          echo $NEW_TASK_DEF_ARN
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --service "${{ env.ECS_SERVICE }}" \
+            --task-definition "$NEW_TASK_DEF_ARN" \
+            --force-new-deployment

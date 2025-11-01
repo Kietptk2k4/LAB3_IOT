@@ -4,7 +4,7 @@ from rfdetr import RFDETRNano
 import time
 
 # Định nghĩa nhãn của bạn
-MY_CLASSES = {0: "with_mask", 1: "No_mask", 2: "Incorrect"}
+MY_CLASSES = {0: "with_mask", 1: "without_mask", 2: "mask_weared_incorrect"}
 
 if __name__ == "__main__":
     print("[INFO] Start loading model...")
