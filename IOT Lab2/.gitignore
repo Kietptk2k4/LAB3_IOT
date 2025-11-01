@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+
+# Checkpoints / Models / Logs / Datasets
+*.pth
+*.pt
+*.onnx
+*.tflite
+*.npz
+*.npy
+*.ckpt
+*.tfevents*
+events.out.tfevents*
+*.log
+*.csv
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.mp4
+*.avi
+*.mkv
+
+# Training runs
+train_*/
+runs/
+outputs/
+wandb/
+
+# Temp
+temp/
+*.png
+*.jpg
+*.jpeg
+
+# VSCode / OS
+.vscode/
+.DS_Store
+Thumbs.db
