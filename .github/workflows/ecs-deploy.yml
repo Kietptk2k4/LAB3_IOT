@@ -64,3 +64,5 @@ jobs:
             --service "${{ env.ECS_SERVICE }}" \
             --task-definition "$NEW_TASK_DEF_ARN" \
             --force-new-deployment
+      - name: Download model from S3
+        run: aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.S3_KEY }} checkpoint_best_total.pth
