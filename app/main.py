@@ -1,5 +1,5 @@
 # main.py
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageFile
@@ -138,3 +138,15 @@ async def predict(file: UploadFile = File(...)):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+# ====== Thêm router có prefix /api để phục vụ qua ALB rule /api/* ======
+api = APIRouter(prefix="/api")
+
+@api.get("/healthz")
+def api_healthz():
+    return healthz()
+
+@api.post("/predict")
+async def api_predict(file: UploadFile = File(...)):
+    return await predict(file)
+
+app.include_router(api)

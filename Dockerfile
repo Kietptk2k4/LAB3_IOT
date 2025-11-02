@@ -1,6 +1,11 @@
 # Dockerfile (đặt ở repo root)
 FROM python:3.11-slim
 
+ENV PYTHONUNBUFFERED=1 \
+    PORT=8080 \
+    MODEL_PATH=/models/checkpoint_best_total.pth \
+    THR=0.5
+
 WORKDIR /app
 
 # Cài deps
@@ -11,10 +16,10 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 COPY app/main.py ./main.py
 COPY checkpoint_best_total.pth /models/checkpoint_best_total.pth
 
-# ENV cho app
-ENV MODEL_PATH=/models/checkpoint_best_total.pth
-ENV THR=0.5
-ENV PORT=8080
+# # ENV cho app
+# ENV MODEL_PATH=/models/checkpoint_best_total.pth
+# ENV THR=0.5
+# ENV PORT=8080
 
 EXPOSE 8080
 
