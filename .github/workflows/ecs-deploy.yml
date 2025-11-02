@@ -44,15 +44,31 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          if [ -z "$ECR_REPOSITORY" ]; then
-            echo "ECR_REPOSITORY is empty!"; exit 1
+          set -euo pipefail
+
+          # Debug env để chắc chắn không rỗng
+          echo "ECR_REGISTRY=$ECR_REGISTRY"
+          echo "ECR_REPOSITORY=$ECR_REPOSITORY"
+
+          if [ -z "${ECR_REPOSITORY:-}" ]; then
+            echo "❌ ECR_REPOSITORY is empty. Set it in 'env:' at top of workflow."; exit 1
           fi
+
+          # Bảo đảm repo tồn tại (idempotent)
+          aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name "$ECR_REPOSITORY"
+
+          # Tag (fallback nếu GITHUB_SHA trống)
+          IMAGE_TAG="${GITHUB_SHA::7}"
+          if [ -z "$IMAGE_TAG" ]; then IMAGE_TAG="latest"; fi
           echo "Repo URI: $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "Tag: $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push  $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          # Build đúng kiến trúc Fargate phổ biến
+          docker build --platform linux/amd64 -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
+          docker push  "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
 
 
       - name: Render task definition with new image
