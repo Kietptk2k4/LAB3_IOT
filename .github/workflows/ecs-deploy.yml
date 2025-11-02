@@ -44,19 +44,31 @@ jobs:
             aws ecr create-repository --repository-name "mask-api"
 
 
-      - name: Build & push (quick fix)
+      - name: Build & push
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}   # phải nhận ra "mask-api"
         run: |
           set -euo pipefail
-          ECR_REPOSITORY="mask-api"   # 👈 gán cứng để chắc chắn không trống
+
+          echo "ECR_REGISTRY=$ECR_REGISTRY"
+          echo "ECR_REPOSITORY=${ECR_REPOSITORY:-<empty>}"
+          if [ -z "${ECR_REPOSITORY:-}" ]; then
+            echo "❌ ECR_REPOSITORY is empty. Set env.ECR_REPOSITORY: mask-api"; exit 1
+          fi
+
           IMAGE_TAG="${GITHUB_SHA::7}"
+          [ -z "$IMAGE_TAG" ] && IMAGE_TAG="latest"
+
+          echo "Repo URI: $ECR_REGISTRY/$ECR_REPOSITORY"
+          echo "Tag: $IMAGE_TAG"
+
+          # build kiến trúc phổ biến của Fargate
           docker build --platform linux/amd64 -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push  "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+          # xuất cho bước render taskdef
           echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
-
-
-
 
       - name: Render task definition with new image
         run: |
