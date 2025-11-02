@@ -1,57 +1,57 @@
-name: Build & Push to ECR
+# name: Build & Push to ECR
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ "main" ]        # đổi nếu bạn dùng nhánh khác
-    paths:
-      - "Dockerfile"
-      - "app/**"
-      - "requirements.txt"
-      - ".github/workflows/ecr-push.yml"
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches: [ "main" ]        # đổi nếu bạn dùng nhánh khác
+#     paths:
+#       - "Dockerfile"
+#       - "app/**"
+#       - "requirements.txt"
+#       - ".github/workflows/ecr-push.yml"
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: read
 
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-      IMAGE_TAG: ${{ secrets.IMAGE_TAG }} # nếu không set secret này, ta sẽ fallback 'latest' ở bước build
+#     env:
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+#       IMAGE_TAG: ${{ secrets.IMAGE_TAG }} # nếu không set secret này, ta sẽ fallback 'latest' ở bước build
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Get AWS Account ID
-        id: aws
-        run: echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+#       - name: Get AWS Account ID
+#         id: aws
+#         run: echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+#       - name: Login to Amazon ECR
+#         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image
-        run: |
-          # fallback nếu IMAGE_TAG rỗng
-          IMAGE_TAG="${IMAGE_TAG:-latest}"
+#       - name: Build, tag, and push image
+#         run: |
+#           # fallback nếu IMAGE_TAG rỗng
+#           IMAGE_TAG="${IMAGE_TAG:-latest}"
 
-          REPO_URI="${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
-          echo "Repo URI: $REPO_URI"
-          echo "Tag: $IMAGE_TAG"
+#           REPO_URI="${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+#           echo "Repo URI: $REPO_URI"
+#           echo "Tag: $IMAGE_TAG"
 
-          docker build -t "$REPO_URI:$IMAGE_TAG" .
-          docker push "$REPO_URI:$IMAGE_TAG"
+#           docker build -t "$REPO_URI:$IMAGE_TAG" .
+#           docker push "$REPO_URI:$IMAGE_TAG"
 
-      - name: Print pushed image URI
-        run: |
-          IMAGE_TAG="${IMAGE_TAG:-latest}"
-          echo "Pushed: ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:$IMAGE_TAG"
+#       - name: Print pushed image URI
+#         run: |
+#           IMAGE_TAG="${IMAGE_TAG:-latest}"
+#           echo "Pushed: ${{ steps.aws.outputs.ACCOUNT_ID }}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:$IMAGE_TAG"
