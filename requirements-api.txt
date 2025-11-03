@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 pillow
 numpy
-# boto3        # nếu tải model từ S3; nếu bake model vào image thì bỏ dòng này
+boto3        # nếu tải model từ S3; nếu bake model vào image thì bỏ dòng này
 torch==2.4.1
 torchvision==0.19.1
 rfdetr==1.3.0

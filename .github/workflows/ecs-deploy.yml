@@ -32,7 +32,7 @@ jobs:
       # 🔽 TẢI MODEL VỀ THƯ MỤC ROOT (cùng cấp Dockerfile)
       - name: Download model from S3
         run: |
-          aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.S3_KEY }} checkpoint_best_total.pth
+          aws s3 cp s3://${{ secrets.S3_BUCKET }}/${{ secrets.MODEL_KEY }} checkpoint_best_total.pth
           ls -lah | sed -n '1,120p'
           python - <<'PY'
           import os; p="checkpoint_best_total.pth"

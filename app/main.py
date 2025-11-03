@@ -9,6 +9,7 @@ import numpy as np, io, os, time, threading
 USE_S3 = os.getenv("USE_S3", "0") == "1"
 if USE_S3:
     import boto3
+    _download_model_from_s3()
 
 # --------- RF-DETR model import (giống code train/infer của bạn) -------------
 from rfdetr import RFDETRNano
